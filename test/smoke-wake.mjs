@@ -80,24 +80,19 @@ try {
   const r = wake(fakeLetters, { ack, nack });
   val = r && typeof r.then === 'function' ? await r : r;
   ok('给了两封信，没炸');
-  if (val === true) ok('返回 true，明确表示送到了');
-  if (val === false) no('返回 false：适配层自己说没送到，核心会重投——如果这不是故意的，就有问题');
 } catch (e) {
   no('给信就炸了：' + e.message);
 }
 
-// 核心认两种「送到了」：调 ack()，或者返回 true。
-// 两个都没有，它就一直重投，直到三次弃掉。
-if (acked + nacked === 0 && val !== true) {
-  no('既没 ack 也没 nack，返回值又不是 true——核心会以为没送到，一直重投');
-} else if (acked + nacked === 0 && val === true) {
-  ok('没调 ack，靠返回 true 表达成功（核心也认）');
-} else if (acked > 0 && nacked === 0) {
-  ok('走的是成功路径（ack=' + acked + '）');
+// 核心只认一条：返回 false 才算没送到。
+// undefined / true / 别的都算送到了——别要求适配层非得 return true。
+if (val === false) {
+  no('返回 false：适配层自己说没送到，核心会重投——如果这不是故意的，就有问题');
 } else if (nacked > 0) {
-  ok('nack 被调了 ' + nacked + ' 次（适配层自己报的失败）');
+  no('调了 nack(' + nacked + ' 次)，但 wake 拿不到 ack/nack，这个调用不起作用——失败要么 return false，要么抛错');
+} else {
+  ok('返回值不是 false，核心当送到了（val=' + String(val) + '）');
 }
-
 clearTimeout(t);
 console.log('\n' + pass + ' 过，' + fail + ' 挂');
 process.exit(fail === 0 ? 0 : 1);

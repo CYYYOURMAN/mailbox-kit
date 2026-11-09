@@ -247,7 +247,7 @@ node dist/mailboxd.mjs --config mailbox.config.json
 
 它不干、也干不了的：读不到各家 ROM 的省电白名单，读不到 Termux:Boot 的自启动开关。这两处只打印一句话让你自己去点，不假装能检测。
 
-鸿蒙：4 及以前是 AOSP 底，能侧载 Termux，可以试。鸿蒙 NEXT 不认安卓 apk，这套走不通。
+鸿蒙：4 及以前是 AOSP 底，侧载 Termux 就能用。鸿蒙 NEXT 不管——它不是安卓，这套跑不了，也不打算为它重写一份。
 ## 网页（看来信、写回执）
 
 ```bash

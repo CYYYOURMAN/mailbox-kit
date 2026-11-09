@@ -11,6 +11,7 @@
 //   node tools/信箱归档.mjs notes/pc/信箱-电脑.md
 //   node tools/信箱归档.mjs notes/pc/信箱-电脑.md --max-lines 600 --max-open 150
 //   node tools/信箱归档.mjs notes/pc/信箱-电脑.md --dry      // 只看会搬几条，不动手
+//   node tools/信箱归档.mjs notes/pc/信箱-电脑.md --keep-recent 0  // 连最新的已办也搬（默认留 30 条）
 
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -19,12 +20,13 @@ import path from 'node:path';
 const MARK = '<!-- 归档指路 -->';
 
 function parseArgs(argv) {
-  const out = { file: null, maxLines: 600, maxOpen: 150, dry: false };
+  const out = { file: null, maxLines: 600, maxOpen: 150, keepRecent: 30, dry: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry') out.dry = true;
     else if (a === '--max-lines') out.maxLines = Number(argv[++i]);
     else if (a === '--max-open') out.maxOpen = Number(argv[++i]);
+    else if (a === '--keep-recent') out.keepRecent = Number(argv[++i]);
     else if (!a.startsWith('--')) out.file = a;
   }
   return out;
@@ -101,7 +103,7 @@ async function main() {
   }
 
   // 保住最新的 30 条已办不搬，其余从最老的开始搬，搬到主文件回落到阈值一半为止。
-  const keepRecent = 30;
+  const keepRecent = opt.keepRecent;
   const doneIdx = items.map((it, i) => (it.done ? i : -1)).filter((i) => i >= 0);
   const movable = doneIdx.slice(0, Math.max(0, doneIdx.length - keepRecent));
   const target = Math.max(1, Math.floor(opt.maxLines / 2));
@@ -115,11 +117,12 @@ async function main() {
   }
 
   if (move.length === 0) {
-    console.log('没有能搬的（已办里扣掉最近 30 条之后是空的）。');
+    console.log(`没有能搬的（已办里扣掉最近 ${keepRecent} 条之后是空的）。`);
     return;
   }
 
-  // 规矩 1：要搬的里出现 [ ]，一律停手。
+  // 规矩 1 的兜底断言：move 只由 [x] 的索引构成，这里再核一遍。
+  // 真出问题时（done 判定错、文件被手改），宁可停手也不静默搬走没办的。
   const bad = move.filter((i) => !items[i].done);
   if (bad.length) {
     console.error(`要搬的 ${bad.length} 条里混着未办，停手，什么都没写。`);
@@ -162,3 +165,5 @@ main().catch((e) => {
   console.error(`出错：${e.message}`);
   process.exit(1);
 });
+
+

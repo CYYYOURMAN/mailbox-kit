@@ -5,3 +5,7 @@
 *.json text eol=lf
 *.png binary
 *.tgz binary
+# PowerShell 和批处理留在 CRLF，别跟着转
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf

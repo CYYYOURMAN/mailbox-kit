@@ -4,7 +4,6 @@ import { build } from 'esbuild';
 import { readFileSync } from 'node:fs';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
 const head = '// ' + pkg.name + ' v' + pkg.version + ' · 生成物，勿手改';
 
 await build({

@@ -126,10 +126,18 @@ if (has('--setup')) {
 
 // ---------- 正常启动 ----------
 const configPath = val('--config', 'mailbox.config.json');
-const absConfig = path.resolve(configPath);
+let absConfig = path.resolve(configPath);
+// 不带任何参数、目录里又没有配置：直接进问答，别让人先学再跑
+if (!existsSync(absConfig) && args.length === 0) {
+  console.log('第一次跑，先问几个问题。');
+  const { spawnSync } = await import('node:child_process');
+  const r = spawnSync(process.execPath, [process.argv[1], '--setup'], { stdio: 'inherit' });
+  if (r.status !== 0) process.exit(r.status ?? 2);
+  absConfig = path.resolve(configPath);
+}
 if (!existsSync(absConfig)) {
   console.error('找不到配置：' + absConfig);
-  console.error('用法：node bin/mailboxd.js --config <配置文件>，或者 --setup 问答生成一份。');
+  console.error('用法：直接 node bin/mailboxd.js（第一次会问你几个问题），或者 --setup 单独生成一份配置。');
   process.exit(2);
 }
 

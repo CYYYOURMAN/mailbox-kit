@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:20:36
+// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:37:26
 
 // bin/mailboxd.js
 import { readFile as readFile5, writeFile as writeFile4, mkdir as mkdir3 } from "node:fs/promises";
@@ -1004,9 +1004,16 @@ if (has("--setup")) {
 }
 var configPath = val("--config", "mailbox.config.json");
 var absConfig = path6.resolve(configPath);
+if (!existsSync(absConfig) && args.length === 0) {
+  console.log("\u7B2C\u4E00\u6B21\u8DD1\uFF0C\u5148\u95EE\u51E0\u4E2A\u95EE\u9898\u3002");
+  const { spawnSync } = await import("node:child_process");
+  const r = spawnSync(process.execPath, [process.argv[1], "--setup"], { stdio: "inherit" });
+  if (r.status !== 0) process.exit(r.status ?? 2);
+  absConfig = path6.resolve(configPath);
+}
 if (!existsSync(absConfig)) {
   console.error("\u627E\u4E0D\u5230\u914D\u7F6E\uFF1A" + absConfig);
-  console.error("\u7528\u6CD5\uFF1Anode bin/mailboxd.js --config <\u914D\u7F6E\u6587\u4EF6>\uFF0C\u6216\u8005 --setup \u95EE\u7B54\u751F\u6210\u4E00\u4EFD\u3002");
+  console.error("\u7528\u6CD5\uFF1A\u76F4\u63A5 node bin/mailboxd.js\uFF08\u7B2C\u4E00\u6B21\u4F1A\u95EE\u4F60\u51E0\u4E2A\u95EE\u9898\uFF09\uFF0C\u6216\u8005 --setup \u5355\u72EC\u751F\u6210\u4E00\u4EFD\u914D\u7F6E\u3002");
   process.exit(2);
 }
 var raw = JSON.parse(await readFile5(absConfig, "utf8"));

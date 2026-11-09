@@ -259,7 +259,11 @@ node dist/mailboxd.mjs --config mailbox.config.json
 
 脚本干了什么：更新源、装 node、判版本够不够 18、从 Gitee 优先下 release 里的单文件（下不到换 GitHub）、生成跑起来的脚本、装开机自启。
 
+`run.sh` 再跑一次会**重启服务**：先把旧的 node 进程杀掉（只认 `node … mailboxd.mjs`，不按名字一锅端），确认干净了再起。所以重跑之前想清楚，网页开着的人会断一下。清不掉的时候它只写一行日志退出，不会假装起来了。
+
 它不干、也干不了的：读不到各家 ROM 的省电白名单，读不到 Termux:Boot 的自启动开关。这两处只打印一句话让你自己去点，不假装能检测。
+
+Termux 里 `/tmp` 不可写（`Permission denied`），脚本和文档一律用 `$HOME`。你要是自己写命令，也别往 `/tmp` 丢东西。
 
 鸿蒙：4 及以前是 AOSP 底，侧载 Termux 就能用。鸿蒙 NEXT 不管——它不是安卓，这套跑不了，也不打算为它重写一份。
 ## 网页（看来信、写回执）

@@ -1,4 +1,4 @@
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 16:06:14
+// mailbox-kit v0.1.0 · 生成物，勿手改
 
 // src/runner.js
 import { EventEmitter } from "node:events";

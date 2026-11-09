@@ -112,12 +112,12 @@ await it('投递失败会重投，满三次弃掉', async () => {
 
 await it('静默时段判定', () => {
   const box = createMailbox({ dir: '.', self: 'pc', quietFrom: 0, quietTo: 8 });
-  assert.equal(box.isQuiet(new Date('2026-11-09T03:00:00')), true);
-  assert.equal(box.isQuiet(new Date('2026-11-09T09:00:00')), false);
-  assert.equal(box.isQuiet(new Date('2026-11-09T23:30:00')), false);
+  assert.equal(box.isQuiet(new Date('2026-01-01T03:00:00')), true);
+  assert.equal(box.isQuiet(new Date('2026-01-01T09:00:00')), false);
+  assert.equal(box.isQuiet(new Date('2026-01-01T23:30:00')), false);
   const box2 = createMailbox({ dir: '.', self: 'pc', quietFrom: 6, quietTo: 7 });
-  assert.equal(box2.isQuiet(new Date('2026-11-09T06:30:00')), true);
-  assert.equal(box2.isQuiet(new Date('2026-11-09T07:30:00')), false);
+  assert.equal(box2.isQuiet(new Date('2026-01-01T06:30:00')), true);
+  assert.equal(box2.isQuiet(new Date('2026-01-01T07:30:00')), false);
 });
 
 await it('排成短文本', () => {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 16:06:14
+// mailbox-kit v0.1.0 · 生成物，勿手改
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {

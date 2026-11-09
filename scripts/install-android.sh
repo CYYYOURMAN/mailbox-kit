@@ -123,12 +123,12 @@ else
 fi
 
 say ""
-say "下一步，手动来一次："
-say "  bash ${DIR}/run.sh --setup"
+say "下一步，手动来一次（两行都能直接复制）："
+say "  cd ~/mailbox && bash run.sh --setup"
 say "配完再起："
-say "  bash ${DIR}/run.sh"
-say "浏览器开 http://127.0.0.1:7654/ 就能看信。端口被占会自动往后找一个，具体地址写在 ${DIR}/run.log 第一行。"
+say "  cd ~/mailbox && bash run.sh"
+say "浏览器开 http://127.0.0.1:7654/ 就能看信，地址带 ?k= 口令，整行一起抄进地址栏。端口被占会自动往后找一个，具体地址在 ~/mailbox/run.log 第一行。"
 say ""
 say "两件脚本管不了、要你自己做的："
 say "  一，把 Termux 的电池优化关掉。不知道在哪就搜「<机型> termux 后台被杀」。"
-say "  二，要读手机里的文件（同步目录在 /sdcard 上）就先跑一次 termux-setup-storage，会弹权限框。"
+say "  二，要读手机里的文件（同步目录在 /sdcard 上）就先跑一次 termux-setup-storage。一般会弹权限框；没弹也能用，那就直接用。"

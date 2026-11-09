@@ -268,10 +268,11 @@ var Mailbox = class extends EventEmitter {
     this.debounceMs = opts.debounceMs ?? 3e3;
     this.minGapMs = opts.minGapMs ?? 5e3;
     this.pollMs = opts.pollMs ?? 3e5;
-    this.quietFrom = opts.quietFrom ?? 0;
-    this.quietTo = opts.quietTo ?? 8;
-    this.quietFromMin = toMinutes(opts.quietFrom, 0);
-    this.quietToMin = toMinutes(opts.quietTo, 8 * 60);
+    this.quietFrom = opts.quietFrom ?? null;
+    this.quietTo = opts.quietTo ?? null;
+    const noQuiet = opts.quietFrom == null && opts.quietTo == null;
+    this.quietFromMin = noQuiet ? 0 : toMinutes(opts.quietFrom, 0);
+    this.quietToMin = noQuiet ? 0 : toMinutes(opts.quietTo, 8 * 60);
     this.maxRetries = opts.maxRetries ?? 3;
     this.firstRunSilent = opts.firstRunSilent ?? true;
     this.read = opts.read ?? null;
@@ -851,6 +852,7 @@ function createUiServer(opts) {
 function stdoutAdapter({ out = console.log, max = 5 } = {}) {
   return async function wake2(letters) {
     out(formatLetters(letters, { max }));
+    return true;
   };
 }
 
@@ -917,13 +919,16 @@ function balloonAdapter({ title = "\u4FE1\u7BB1\u6709\u4FE1", pwsh, max = 5 } = 
     const text = formatLetters(letters, { max });
     const body = text.split("\n").slice(1).join("\n") || text;
     if (process.platform === "win32") {
-      return run(shell, ["-NoProfile", "-NonInteractive", "-Command", PS_SCRIPT, "-Title", title, "-Text", body]);
+      await run(shell, ["-NoProfile", "-NonInteractive", "-Command", PS_SCRIPT, "-Title", title, "-Text", body]);
+      return true;
     }
     if (process.platform === "darwin") {
       const script = `display notification ${JSON.stringify(body)} with title ${JSON.stringify(title)}`;
-      return run("osascript", ["-e", script]);
+      await run("osascript", ["-e", script]);
+      return true;
     }
-    return run("notify-send", [title, body]);
+    await run("notify-send", [title, body]);
+    return true;
   };
 }
 
@@ -1078,8 +1083,9 @@ var box = createMailbox({
 });
 box.on("letters", async ({ letters, ack, nack }) => {
   try {
-    await wake(letters);
-    ack();
+    const ok = await wake(letters);
+    if (ok === false) nack("\u9002\u914D\u5C42\u8FD4\u56DE false\uFF0C\u6CA1\u9001\u5230");
+    else ack();
   } catch (err) {
     nack(err.message);
   }

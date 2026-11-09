@@ -253,10 +253,11 @@ var Mailbox = class extends EventEmitter {
     this.debounceMs = opts.debounceMs ?? 3e3;
     this.minGapMs = opts.minGapMs ?? 5e3;
     this.pollMs = opts.pollMs ?? 3e5;
-    this.quietFrom = opts.quietFrom ?? 0;
-    this.quietTo = opts.quietTo ?? 8;
-    this.quietFromMin = toMinutes(opts.quietFrom, 0);
-    this.quietToMin = toMinutes(opts.quietTo, 8 * 60);
+    this.quietFrom = opts.quietFrom ?? null;
+    this.quietTo = opts.quietTo ?? null;
+    const noQuiet = opts.quietFrom == null && opts.quietTo == null;
+    this.quietFromMin = noQuiet ? 0 : toMinutes(opts.quietFrom, 0);
+    this.quietToMin = noQuiet ? 0 : toMinutes(opts.quietTo, 8 * 60);
     this.maxRetries = opts.maxRetries ?? 3;
     this.firstRunSilent = opts.firstRunSilent ?? true;
     this.read = opts.read ?? null;

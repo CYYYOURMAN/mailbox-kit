@@ -31,10 +31,13 @@ export class Mailbox extends EventEmitter {
     this.debounceMs = opts.debounceMs ?? 3000;
     this.minGapMs = opts.minGapMs ?? 5000;
     this.pollMs = opts.pollMs ?? 300000;
-    this.quietFrom = opts.quietFrom ?? 0;
-    this.quietTo = opts.quietTo ?? 8;
-    this.quietFromMin = toMinutes(opts.quietFrom, 0);
-    this.quietToMin = toMinutes(opts.quietTo, 8 * 60);
+    // quietFrom / quietTo 都不填，或者明确给 null，就表示「不设静默」。
+    // 注意不能用 ?? 兜底：null 会被当成 0 和 8，反而天天半夜静默。
+    this.quietFrom = opts.quietFrom ?? null;
+    this.quietTo = opts.quietTo ?? null;
+    const noQuiet = opts.quietFrom == null && opts.quietTo == null;
+    this.quietFromMin = noQuiet ? 0 : toMinutes(opts.quietFrom, 0);
+    this.quietToMin = noQuiet ? 0 : toMinutes(opts.quietTo, 8 * 60);
     this.maxRetries = opts.maxRetries ?? 3;
     this.firstRunSilent = opts.firstRunSilent ?? true;
 

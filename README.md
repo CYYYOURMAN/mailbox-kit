@@ -227,6 +227,27 @@ node dist/mailboxd.mjs --config mailbox.config.json
 
 **单文件版不提供热重载。** 打完之后 `import.meta.url` 指到 `dist/`，热重载那套用它拼路径，会失效。改代码请用源码跑；只想跑命令行的，下单个文件就够。
 
+## 安卓上装（Termux）
+
+手机上跑这套，不用写 App。装个 Termux，跑一个脚本。
+
+1. 从 F-Droid 装 Termux（别用应用商店那个，版本旧）。想开机自启就连 `Termux:Boot` 一起装。
+2. 把 `scripts/install-android.sh` 下到手机，记下它的 sha256：
+   ```
+   sha256sum install-android.sh
+   ```
+   跟你下到的那份对一下，对不上就别跑。
+3. 跑它：
+   ```
+   bash install-android.sh
+   ```
+4. 跑完照它打印的做。有几步脚本替不了你：关电池优化、允许 Termux:Boot 自启动、同步目录在 /sdcard 上要先 `termux-setup-storage`。
+
+脚本干了什么：更新源、装 node、判版本够不够 18、从 Gitee 优先下 release 里的单文件（下不到换 GitHub）、生成跑起来的脚本、装开机自启。
+
+它不干、也干不了的：读不到各家 ROM 的省电白名单，读不到 Termux:Boot 的自启动开关。这两处只打印一句话让你自己去点，不假装能检测。
+
+鸿蒙：4 及以前是 AOSP 底，能侧载 Termux，可以试。鸿蒙 NEXT 不认安卓 apk，这套走不通。
 ## 网页（看来信、写回执）
 
 ```bash

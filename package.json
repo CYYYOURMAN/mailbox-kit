@@ -1,0 +1,38 @@
+{
+  "name": "mailbox-kit",
+  "version": "0.1.0",
+  "description": "文件信箱：用几份 Markdown 文件在两个进程之间传话，靠一个 adapters/wake 把消息叫醒到人。核心不认识任何引擎。",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "mailboxd": "bin/mailboxd.js"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./adapters/stdout": "./adapters/stdout.js",
+    "./adapters/balloon": "./adapters/balloon.js",
+    "./adapters/dsh-engine.example": "./adapters/dsh-engine.example.js"
+  },
+  "files": [
+    "src",
+    "adapters",
+    "bin",
+    "test",
+    "README.md",
+    "mailbox.config.example.json"
+  ],
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "keywords": [
+    "mailbox",
+    "markdown",
+    "agent",
+    "syncthing",
+    "notify"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

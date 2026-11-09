@@ -1,0 +1,19 @@
+{
+  "dir": "./notes",
+  "self": "pc",
+  "prefix": "inbox-",
+  "ext": ".md",
+  "seenPath": "./.mailbox-seen.json",
+  "logPath": "./.mailbox.log",
+  "debounceMs": 3000,
+  "minGapMs": 5000,
+  "pollMs": 300000,
+  "quietFrom": 0,
+  "quietTo": 8,
+  "maxRetries": 3,
+  "firstRunSilent": true,
+  "adapter": "stdout",
+  "adapterOptions": {
+    "max": 5
+  }
+}

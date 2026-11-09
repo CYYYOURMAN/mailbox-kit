@@ -1,4 +1,4 @@
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:20:36
+// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 16:06:14
 
 // src/runner.js
 import { EventEmitter } from "node:events";
@@ -213,7 +213,9 @@ function createLogger(file, { maxBytes = 1024 * 1024, keep = 2 } = {}) {
     size = 0;
   }
   return async function log(line) {
-    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace("T", " ").slice(0, 19);
+    const d = /* @__PURE__ */ new Date();
+    const p2 = (n) => String(n).padStart(2, "0");
+    const stamp = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
     const text = `[${stamp}] ${line}
 `;
     try {

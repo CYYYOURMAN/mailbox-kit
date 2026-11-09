@@ -37,9 +37,9 @@ await it('拆条：未办、已办、续行', () => {
 await it('方向看文件名，冲突文件算同一写者', () => {
   assert.equal(writerOf('inbox-pc.md'), 'pc');
   assert.equal(writerOf('inbox-phone.md'), 'phone');
-  assert.equal(writerOf('inbox-pc.sync-conflict-20261109-162710-OTSA3VV.md'), 'pc');
+  assert.equal(writerOf('inbox-pc.sync-conflict-20261109-162710-ABCDEFG.md'), 'pc');
   assert.equal(writerOf('别的.md'), null);
-  assert.equal(isConflict('inbox-pc.sync-conflict-20261109-162710-OTSA3VV.md'), true);
+  assert.equal(isConflict('inbox-pc.sync-conflict-20261109-162710-ABCDEFG.md'), true);
   assert.equal(isConflict('inbox-pc.md'), false);
 });
 
@@ -174,6 +174,7 @@ await it('单实例锁：活的不抢，死的能接管', async () => {
 });
 console.log(`\n${pass} 过，${fails.length} 挂`);
 process.exit(fails.length ? 1 : 0);
+
 
 
 

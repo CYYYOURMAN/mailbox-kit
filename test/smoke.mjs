@@ -14,7 +14,7 @@
 // 用法：
 //   node test/smoke.mjs <插件入口的绝对路径>
 // 例：
-//   node test/smoke.mjs C:/Users/30259/.dsh/plugins-data/mailbox-dsh/lib/index.js
+//   node test/smoke.mjs <插件入口的绝对路径>.js
 
 import { pathToFileURL } from 'node:url'
 import { existsSync } from 'node:fs'
@@ -131,3 +131,4 @@ if (fails.length) {
 }
 console.log(`✓ 冒烟过：apply 跑得起来，${n} 个定时器各掐了一次，没炸`)
 process.exit(0)
+

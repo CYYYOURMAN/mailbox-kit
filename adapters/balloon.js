@@ -53,11 +53,22 @@ $icon.Dispose()
  * @param {string} [opts.pwsh]  PowerShell 7 的路径；Windows PowerShell 5.1 读 UTF-8 脚本会乱码
  * @param {number} [opts.max]   气泡里最多列几条
  */
+/**
+ * 找 PowerShell 7。Windows PowerShell 5.1 读 UTF-8 脚本会乱码，所以优先 pwsh。
+ * 不写死任何路径里的用户名——按安装顺序找，找不到就退回 PATH 上的 pwsh。
+ */
+function defaultPwsh() {
+  if (process.platform !== 'win32') return 'pwsh';
+  const roots = [process.env.LOCALAPPDATA, process.env.ProgramFiles, process.env['ProgramFiles(x86)']];
+  for (const root of roots) {
+    if (!root) continue;
+    const p = `${root}\\Microsoft\\PowerShell\\7\\pwsh.exe`;
+    try { if (require('node:fs').existsSync(p)) return p; } catch {}
+  }
+  return 'pwsh'; // 交给 PATH
+}
 export function balloonAdapter({ title = '信箱有信', pwsh, max = 5 } = {}) {
-  const shell =
-    pwsh ??
-    (process.env.MAILBOX_PWSH ||
-      'C:/Users/30259/AppData/Local/Microsoft/PowerShell/7/pwsh.exe');
+  const shell = pwsh ?? process.env.MAILBOX_PWSH ?? defaultPwsh();
 
   return async function wake(letters) {
     const text = formatLetters(letters, { max }); // 第一行是「信箱有 N 条新信」，正文从第二行起
@@ -74,3 +85,4 @@ export function balloonAdapter({ title = '信箱有信', pwsh, max = 5 } = {}) {
 }
 
 export default balloonAdapter;
+

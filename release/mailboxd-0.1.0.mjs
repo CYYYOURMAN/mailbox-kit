@@ -1,5 +1,11 @@
 #!/usr/bin/env node
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:37:26
+// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 16:06:14
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
 
 // bin/mailboxd.js
 import { readFile as readFile5, writeFile as writeFile4, mkdir as mkdir3 } from "node:fs/promises";
@@ -222,7 +228,9 @@ function createLogger(file, { maxBytes = 1024 * 1024, keep = 2 } = {}) {
     size = 0;
   }
   return async function log(line) {
-    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace("T", " ").slice(0, 19);
+    const d = /* @__PURE__ */ new Date();
+    const p2 = (n) => String(n).padStart(2, "0");
+    const stamp = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
     const text = `[${stamp}] ${line}
 `;
     try {
@@ -890,8 +898,21 @@ Start-Sleep -Seconds 13
 $icon.Visible = $false
 $icon.Dispose()
 `;
+function defaultPwsh() {
+  if (process.platform !== "win32") return "pwsh";
+  const roots = [process.env.LOCALAPPDATA, process.env.ProgramFiles, process.env["ProgramFiles(x86)"]];
+  for (const root of roots) {
+    if (!root) continue;
+    const p = `${root}\\Microsoft\\PowerShell\\7\\pwsh.exe`;
+    try {
+      if (__require("node:fs").existsSync(p)) return p;
+    } catch {
+    }
+  }
+  return "pwsh";
+}
 function balloonAdapter({ title = "\u4FE1\u7BB1\u6709\u4FE1", pwsh, max = 5 } = {}) {
-  const shell = pwsh ?? (process.env.MAILBOX_PWSH || "C:/Users/30259/AppData/Local/Microsoft/PowerShell/7/pwsh.exe");
+  const shell = pwsh ?? process.env.MAILBOX_PWSH ?? defaultPwsh();
   return async function wake2(letters) {
     const text = formatLetters(letters, { max });
     const body = text.split("\n").slice(1).join("\n") || text;
@@ -1044,7 +1065,7 @@ var box = createMailbox({
   prefix: raw.prefix,
   ext: raw.ext,
   seenPath: resolveOne(raw.seenPath),
-  logPath: resolveOne(raw.logPath),
+  logPath: resolveOne(val("--log", raw.logPath)),
   debounceMs: raw.debounceMs,
   minGapMs: raw.minGapMs,
   pollMs: raw.pollMs,

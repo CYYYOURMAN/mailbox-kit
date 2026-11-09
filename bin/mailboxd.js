@@ -189,8 +189,11 @@ const box = createMailbox({
 
 box.on('letters', async ({ letters, ack, nack }) => {
   try {
-    await wake(letters);
-    ack();
+    const ok = await wake(letters);
+    // 适配层明确说没送到（返回 false），就别记指纹，让核心重投。
+    // 返回 undefined 或 true 都算送到了。
+    if (ok === false) nack('适配层返回 false，没送到');
+    else ack();
   } catch (err) {
     nack(err.message);
   }

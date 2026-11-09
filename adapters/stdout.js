@@ -6,6 +6,7 @@ import { formatLetters } from '../src/index.js';
 export function stdoutAdapter({ out = console.log, max = 5 } = {}) {
   return async function wake(letters) {
     out(formatLetters(letters, { max }));
+    return true; // 打印出来就算送到，核心据此记指纹
   };
 }
 

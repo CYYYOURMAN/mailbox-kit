@@ -74,13 +74,16 @@ export function balloonAdapter({ title = '信箱有信', pwsh, max = 5 } = {}) {
     const text = formatLetters(letters, { max }); // 第一行是「信箱有 N 条新信」，正文从第二行起
     const body = text.split('\n').slice(1).join('\n') || text;
     if (process.platform === 'win32') {
-      return run(shell, ['-NoProfile', '-NonInteractive', '-Command', PS_SCRIPT, '-Title', title, '-Text', body]);
+      await run(shell, ['-NoProfile', '-NonInteractive', '-Command', PS_SCRIPT, '-Title', title, '-Text', body]);
+      return true;
     }
     if (process.platform === 'darwin') {
       const script = `display notification ${JSON.stringify(body)} with title ${JSON.stringify(title)}`;
-      return run('osascript', ['-e', script]);
+      await run('osascript', ['-e', script]);
+      return true;
     }
-    return run('notify-send', [title, body]);
+    await run('notify-send', [title, body]);
+    return true;
   };
 }
 

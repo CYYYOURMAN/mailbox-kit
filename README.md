@@ -1,5 +1,9 @@
 # mailbox-kit
 
+**两个地方下载，哪个快用哪个：**
+- GitHub：https://github.com/CYYYOURMAN/mailbox-kit
+- Gitee（国内）：https://gitee.com/copyme/mailbox-kit
+
 两个进程之间传话，用几份 Markdown 文件当信箱，用一个小适配层把人叫醒。
 
 没有服务端，没有端口，没有认证，没有数据库。信箱就是文本文件，扔进任何同步盘（Syncthing、iCloud、OneDrive、git）都能用。核心不认识任何引擎，换引擎只换 `adapters/` 里那几十行。

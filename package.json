@@ -21,6 +21,7 @@
     "docs",
     "release",
     "scripts",
+    "tools",
     "README.md",
     "mailbox.config.example.json"
   ],

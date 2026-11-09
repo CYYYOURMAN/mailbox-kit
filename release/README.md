@@ -1,6 +1,8 @@
+> 这是单文件版说明，完整文档看上一级 [README.md](../README.md)。
+
 # 直接能跑的单文件
 
-这两个文件是把 src/ 和 dapters/ 打成一包，不需要装依赖，不需要 npm。
+这两个文件是把 src/ 和 adapters/ 打成一包，不需要装依赖，不需要 npm。
 
 - `mailboxd-0.1.0.mjs` —— 命令行（守护、跑一轮、起网页、问答配置）
 - `mailbox-kit-0.1.0.mjs` —— 库，给适配层 import 用

@@ -6,3 +6,4 @@ mailbox.config.json
 .DS_Store
 dist/
 .uitest/
+.uitest*/

@@ -90,6 +90,15 @@ if [ ! -f mailbox.config.json ]; then
   exit 1
 fi
 echo "$(date '+%F %T') 起来，先试 http://127.0.0.1:7654/；被占会往后找，实际地址看下面插件打的那行" >> run.log
+# 旧进程不清掉就起，新进程会让位给 7654，网页一直 403、口令对不上。先礼后兵，确认干净再起。
+pkill -f mailboxd 2>/dev/null
+sleep 2
+pkill -9 -f mailboxd 2>/dev/null
+sleep 1
+if pgrep -f mailboxd >/dev/null 2>&1; then
+  echo "$(date '+%F %T') 旧进程杀不掉，先手动处理再起：pgrep -f mailboxd" >> run.log
+  exit 1
+fi
 exec node mailboxd.mjs --config mailbox.config.json --ui
 EOS
 chmod +x "${DIR}/run.sh"

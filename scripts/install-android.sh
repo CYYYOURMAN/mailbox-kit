@@ -8,7 +8,7 @@ set -eu
 VERSION="${MAILBOX_VERSION:-0.1.0}"
 FILE="mailboxd-${VERSION}.mjs"
 # 兜底用的，拉不到旁文件时拿它比
-SHA_FALLBACK="8aead14a170d56c33eb081b0460dd1c14046baf0b7c5d977391a90066b07ecde"
+SHA_FALLBACK="34452264fd21ddf561216b35d2188d6aae68474992283c00bc3f1d730b4ffffd"
 BASE_GITEE="https://gitee.com/copyme/mailbox-kit/raw/main/release"
 BASE_GITHUB="https://raw.githubusercontent.com/CYYYOURMAN/mailbox-kit/main/release"
 DIR="${HOME}/mailbox"

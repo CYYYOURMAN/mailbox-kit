@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:14:03
+// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:20:36
 
 // bin/mailboxd.js
 import { readFile as readFile5, writeFile as writeFile4, mkdir as mkdir3 } from "node:fs/promises";
@@ -581,6 +581,8 @@ var PAGE = [
   ".card{border:1px solid #8884;border-radius:10px;padding:12px 14px;margin:10px 0}",
   ".meta{font-size:12px;opacity:.6;margin-bottom:6px}",
   ".body{white-space:pre-wrap}",
+  ".attach{margin-top:6px;font-size:14px;color:#57606a;font-family:ui-monospace,Consolas,monospace}",
+  ".attach.gone{color:#cf222e}",
   ".mine{border-left:3px solid #3a7}",
   ".peer{border-left:3px solid #38f}",
   "button{font:inherit;padding:4px 10px;border-radius:8px;border:1px solid #8886;background:transparent;cursor:pointer}",
@@ -612,6 +614,11 @@ var PAGE = [
   '    var c = el("div","card " + (it.mine?"mine":"peer") + (it.done?" done":""));',
   '    c.appendChild(el("div","meta", it.time + " \xB7 " + it.writer + (it.mine?"\uFF08\u6211\uFF09":"") + (it.done?" \xB7 \u5DF2\u529E":"")));',
   '    c.appendChild(el("div","body", it.body));',
+  "    (it.attach||[]).forEach(function(a){",
+  '      var sz = a.size >= 1024 ? (a.size/1024).toFixed(1) + "K" : a.size + "B";',
+  '      var txt = a.exists ? ("\u3014\u9644\u4EF6 " + a.rel + " " + sz + "\u3015") : ("\u3014\u9644\u4EF6 " + a.rel + " \u4E0D\u89C1\u4E86\u3015");',
+  '      c.appendChild(el("div", a.exists ? "attach" : "attach gone", txt));',
+  "    });",
   '    var row = el("div","row");',
   "    if(it.mine && !it.done){",
   '      var b = el("button",null,"\u6807\u5DF2\u529E");',
@@ -700,6 +707,10 @@ function createUiServer(opts) {
           line: it.line,
           body: it.body,
           time: (it.body.match(/^(\d{1,2}:\d{2})/) || [])[1] || "",
+          attach: await Promise.all((it.attachments || []).map(async function(a) {
+            const chk = await checkAttachment(dir, a);
+            return { rel: a, exists: chk.exists, size: chk.size };
+          })),
           fp
         });
       }

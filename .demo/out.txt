@@ -1,0 +1,4 @@
+自己那份：C:\Users\30259\Aurabot\qq-chats\mailbox-kit\.demo\信箱-电脑.md
+网页：http://127.0.0.1:7713/?k=f499aadbb2a1c26f
+（这个地址带口令，别贴出去。只在本机能开。）
+信箱守护起来了：C:\Users\30259\Aurabot\qq-chats\mailbox-kit\.demo（自己=电脑）

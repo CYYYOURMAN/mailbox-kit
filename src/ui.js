@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, rename, open } from 'node:fs/promises';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { listBoxFiles, parseLetters, fingerprint, writerOf } from './mailbox.js';
+import { listBoxFiles, parseLetters, fingerprint, writerOf, checkAttachment } from './mailbox.js';
 
 const PAGE = [
   '<!doctype html>',
@@ -21,6 +21,8 @@ const PAGE = [
   '.card{border:1px solid #8884;border-radius:10px;padding:12px 14px;margin:10px 0}',
   '.meta{font-size:12px;opacity:.6;margin-bottom:6px}',
   '.body{white-space:pre-wrap}',
+  '.attach{margin-top:6px;font-size:14px;color:#57606a;font-family:ui-monospace,Consolas,monospace}',
+  '.attach.gone{color:#cf222e}',
   '.mine{border-left:3px solid #3a7}',
   '.peer{border-left:3px solid #38f}',
   'button{font:inherit;padding:4px 10px;border-radius:8px;border:1px solid #8886;background:transparent;cursor:pointer}',
@@ -51,7 +53,12 @@ const PAGE = [
   '  items.forEach(function(it){',
   '    var c = el("div","card " + (it.mine?"mine":"peer") + (it.done?" done":""));',
   '    c.appendChild(el("div","meta", it.time + " · " + it.writer + (it.mine?"（我）":"") + (it.done?" · 已办":"")));',
-  '    c.appendChild(el("div","body", it.body));',
+  '    c.appendChild(el(\"div\",\"body\", it.body));',
+  '    (it.attach||[]).forEach(function(a){',
+  '      var sz = a.size >= 1024 ? (a.size/1024).toFixed(1) + \"K\" : a.size + \"B\";',
+  '      var txt = a.exists ? (\"〔附件 \" + a.rel + \" \" + sz + \"〕\") : (\"〔附件 \" + a.rel + \" 不见了〕\");',
+  '      c.appendChild(el(\"div\", a.exists ? \"attach\" : \"attach gone\", txt));',
+  '    });',
   '    var row = el("div","row");',
   '    if(it.mine && !it.done){',
   '      var b = el("button",null,"标已办");',
@@ -153,6 +160,10 @@ export function createUiServer(opts) {
           line: it.line,
           body: it.body,
           time: (it.body.match(/^(\d{1,2}:\d{2})/) || [])[1] || '',
+          attach: await Promise.all((it.attachments || []).map(async function (a) {
+            const chk = await checkAttachment(dir, a);
+            return { rel: a, exists: chk.exists, size: chk.size };
+          })),
           fp,
         });
       }

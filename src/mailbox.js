@@ -12,6 +12,26 @@ const ITEM_RE = /^- \[([ xX])\]\s+(.*)$/;
 const CONT_RE = /^\s{2,}(\S.*)$/;
 // 附件行：`附件: 附件/x.png`，路径按信箱目录算，不写本机绝对路径（另一个平台读不到）。
 const ATT_RE = /^附件\s*[:：]\s*(.+)$/;
+// 收件人：`16:55 甲→乙：正文`。只认第一行、只取第一个箭头，正文里的箭头不算。
+// 箭头三种写法都认，冒号全角半角都认。`from` / `to` 拿不到就留空，当广播。
+const HEAD_RE = /^(?:\d{1,2}:\d{2}\s+)?([^\s→>⇒:：]{1,32})\s*(?:→|->|⇒)\s*([^\s→>⇒:：]{1,32})\s*[:：]\s*([\s\S]*)$/;
+
+/** 名字归一化：去空格、全角转半角、转小写。两边算同一个名字用。 */
+export function normName(s) {
+  return String(s == null ? '' : s)
+    .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/\u3000/g, ' ')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+/** 从一条信的第一行里认出「谁写的、写给谁」。认不出就返回空串。 */
+export function parseHead(body) {
+  const first = String(body || '').split('\n')[0] || '';
+  const m = HEAD_RE.exec(first);
+  if (!m) return { from: '', to: '' };
+  return { from: m[1].trim(), to: m[2].trim() };
+}
 
 /**
  * 把一份信箱文本拆成条目。
@@ -26,7 +46,7 @@ export function parseLetters(text) {
     const m = ITEM_RE.exec(line);
     if (m) {
       if (cur) out.push(cur);
-      cur = { done: m[1] !== ' ', body: m[2].trim(), line: i + 1, attachments: [] };
+      cur = { done: m[1] !== ' ', body: m[2].trim(), line: i + 1, attachments: [], from: '', to: '' };
       continue;
     }
     const c = CONT_RE.exec(line);
@@ -49,6 +69,9 @@ export function parseLetters(text) {
       else kept.push(line);
     }
     item.body = kept.join('\n').trim();
+    const h = parseHead(item.body);
+    item.from = h.from;
+    item.to = h.to;
   }
   return out;
 }
@@ -157,3 +180,4 @@ export function fingerprint(writer, body) {
   const norm = String(body).replace(/\s+/g, ' ').trim();
   return createHash('sha256').update(`${writer}\u0000${norm}`).digest('hex').slice(0, 16);
 }
+

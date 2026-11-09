@@ -172,8 +172,58 @@ await it('单实例锁：活的不抢，死的能接管', async () => {
   assert.equal(d.ok, true, '死进程留的锁要能接管');
   await d.release();
 });
+await it('收件人：不是写给我的就不投，但要记指纹', async () => {
+  const dir = await tmp();
+  await writeFile(path.join(dir, '信箱-甲.md'), [
+    '- [ ] 10:00 甲→乙：只给乙',
+    '- [ ] 10:01 甲→大家：都给',
+    '- [ ] 10:02 没有箭头的旧格式',
+    '- [ ] 10:03 甲→丙：只给丙',
+  ].join('\n') + '\n', 'utf8');
+  const seenPath = path.join(dir, 'seen.json');
+  const a = createMailbox({ dir, self: '乙', read: ['信箱-甲.md'], seenPath, firstRunSilent: false });
+  const got = await a.collect();
+  assert.equal(got.length, 3, '乙该收到 1、2、3 三条');
+  assert.equal(a.skipped, 1, '乙该跳过 1 条（给丙的）');
+  const b = createMailbox({ dir, self: '丙', read: ['信箱-甲.md'], seenPath: path.join(dir, 'seen2.json'), firstRunSilent: false });
+  const got2 = await b.collect();
+  assert.equal(got2.length, 3, '丙该收到给大家的、旧格式的、给丙的三条');
+  const c = createMailbox({ dir, self: '乙', read: ['信箱-甲.md'], seenPath: path.join(dir, 'seen3.json'), firstRunSilent: false });
+  await c.collect();
+  await c.seen.save();
+  const d = createMailbox({ dir, self: '乙', read: ['信箱-甲.md'], seenPath: path.join(dir, 'seen3.json'), firstRunSilent: false });
+  const got4 = await d.collect();
+  assert.equal(got4.some((g) => g.body.includes('只给丙')), false, '跳过的那条也记了指纹，第二轮不该再冒出来');
+  assert.equal(got4.length, 3, '其余三条还没投过，该照旧在');
+});
+
+await it('收件人：别名和开关', async () => {
+  const dir = await tmp();
+  const box = createMailbox({ dir, self: '电脑', aliases: ['电脑那台'], read: [], firstRunSilent: false });
+  assert.equal(box.isMine({ to: '电脑' }), true);
+  assert.equal(box.isMine({ to: '电脑那台' }), true, '别名也算自己');
+  assert.equal(box.isMine({ to: '手机' }), false);
+  assert.equal(box.isMine({ to: '大家' }), true, '大家是广播');
+  assert.equal(box.isMine({ to: '' }), true, '没写收件人当广播');
+  const off = createMailbox({ dir, self: '电脑', recipientFilter: false, read: [], firstRunSilent: false });
+  assert.equal(off.isMine({ to: '随便谁' }), true, '关掉开关就全收');
+});
+
+await it('收件人：箭头写法都认，正文里的箭头不算', async () => {
+  const { parseHead } = await import('../src/mailbox.js');
+  assert.deepEqual(parseHead('16:55 甲→乙：正文'), { from: '甲', to: '乙' });
+  assert.deepEqual(parseHead('甲 -> 乙 : 正文'), { from: '甲', to: '乙' });
+  assert.deepEqual(parseHead('甲⇒乙：正文'), { from: '甲', to: '乙' });
+  assert.deepEqual(parseHead('没有箭头').to, '');
+  assert.deepEqual(parseHead('甲→乙：a→b 里面的箭头').to, '乙', '只取第一个箭头');
+});
 console.log(`\n${pass} 过，${fails.length} 挂`);
 process.exit(fails.length ? 1 : 0);
+
+
+
+
+
 
 
 

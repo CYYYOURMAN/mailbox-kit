@@ -15,6 +15,7 @@ import { pathToFileURL } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { createMailbox } from '../src/index.js';
+import { rm } from 'node:fs/promises';
 import { acquireLock } from '../src/lock.js';
 import { createUiServer } from '../src/ui.js';
 import { stdoutAdapter } from '../adapters/stdout.js';
@@ -144,6 +145,20 @@ if (!existsSync(absConfig)) {
 const raw = JSON.parse(await readFile(absConfig, 'utf8'));
 const base = path.dirname(absConfig);
 
+// ---------- --reset-seen：清掉指纹库，让旧信重新投一遍 ----------
+// 改名、加别名之后用。只清指纹，不碰信箱文件本身。
+if (has('--reset-seen')) {
+  const seenAbs = path.resolve(base, raw.seenPath ?? `.mailbox-seen-${raw.self}.json`);
+  if (existsSync(seenAbs)) {
+    await rm(seenAbs, { force: true });
+    console.log('清掉了：' + seenAbs);
+    console.log('下次启动会把信箱里没办的信重新看一遍；已经标 [x] 的不会投。');
+  } else {
+    console.log('本来就没有指纹库：' + seenAbs);
+  }
+  process.exit(0);
+}
+
 function resolveOne(p) {
   return p ? path.resolve(base, p) : undefined;
 }
@@ -238,3 +253,4 @@ process.on('SIGINT', bye);
 process.on('SIGTERM', bye);
 
 console.log('信箱守护起来了：' + box.dir + '（自己=' + box.self + '）');
+

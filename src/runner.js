@@ -4,7 +4,7 @@
 import { EventEmitter } from 'node:events';
 import { watch } from 'node:fs';
 import path from 'node:path';
-import { checkAttachment, fingerprint, listBoxFiles, parseLetters, readStable } from './mailbox.js';
+import { checkAttachment, fingerprint, listBoxFiles, normName, parseLetters, readStable } from './mailbox.js';
 import { SeenStore } from './seen.js';
 import { createLogger } from './log.js';
 
@@ -42,6 +42,10 @@ export class Mailbox extends EventEmitter {
     this.firstRunSilent = opts.firstRunSilent ?? true;
 
     this.read = opts.read ?? null;
+    // 收件人过滤：只有箭头后面写着自己（或别名、或大家）的才投。
+    this.recipientFilter = opts.recipientFilter !== false;
+    this.aliases = Array.isArray(opts.aliases) ? opts.aliases.map(normName) : [];
+    this.selfKey = normName(opts.self);
     this.seen = new SeenStore(this.seenPath, { limit: opts.seenLimit ?? 500 });
     this.log = createLogger(opts.logPath);    this.retries = new Map(); // fp -> 次数（内存，重启清零没关系，会再投）
     this.abandoned = new Set();
@@ -150,6 +154,16 @@ export class Mailbox extends EventEmitter {
     return base.includes(this.prefix);
   }
 
+  /** 这条是不是写给我的。认不出收件人就当广播（老格式兼容）。 */
+  isMine(item) {
+    if (!this.recipientFilter) return true;
+    const to = normName(item.to);
+    if (!to) return true;                       // 没写收件人：老格式，当广播
+    if (to === 'all' || to === '大家' || to === '所有人' || to === '全体') return true;
+    if (to === this.selfKey) return true;
+    if (this.aliases.includes(to)) return true;
+    return false;
+  }
   isQuiet(now = new Date()) {
     const m = now.getHours() * 60 + now.getMinutes();
     const a = this.quietFromMin;
@@ -160,6 +174,8 @@ export class Mailbox extends EventEmitter {
 
   /** 扫一遍，返回还没投过的未办条。 */
   async collect() {
+    this.skipped = 0;
+    this.lastSkipped = '';
     const files = await listBoxFiles(this.dir, { self: this.self, prefix: this.prefix, ext: this.ext, read: this.read });
     const out = [];
     const seenThisRound = new Set();
@@ -175,6 +191,14 @@ export class Mailbox extends EventEmitter {
         if (item.done) continue;
         const fp = fingerprint(f.writer, item.body);
         if (this.seen.has(fp) || this.abandoned.has(fp) || seenThisRound.has(fp)) continue;
+        // 不是写给我的：不投，但记指纹，免得每轮重解析。老格式单独打一笔。
+        if (!this.isMine(item)) {
+          seenThisRound.add(fp);
+          this.seen.add(fp);
+          this.skipped = (this.skipped || 0) + 1;
+          this.lastSkipped = item.to || '(没写)';
+          continue;
+        }
         seenThisRound.add(fp);
         const attachments = [];
         for (const rel of item.attachments) attachments.push(await checkAttachment(this.dir, rel));
@@ -208,7 +232,7 @@ export class Mailbox extends EventEmitter {
       }
       const letters = await this.collect();
       if (!letters.length) {
-        if (this.round % 20 === 1) this.log('没有新信');
+      if (this.round % 20 === 1) this.log('没有新信' + (this.skipped ? '（跳过 ' + this.skipped + ' 条不是给我的，收件人=' + this.lastSkipped + '）' : ''));
         return;
       }
       await this.deliver(letters);
@@ -250,6 +274,7 @@ export class Mailbox extends EventEmitter {
       for (const l of letters) this.seen.add(l.fp);
       await this.seen.save();
       this.lastDelivered = Date.now();
+      if (this.skipped) this.log('跳过 ' + this.skipped + ' 条不是给我的（收件人=' + this.lastSkipped + '）');
       this.log(`投了 ${letters.length} 条 来=${[...new Set(letters.map((l) => l.writer))].join(',')} 首条：${letters[0].body.slice(0, 20).replace(/\n/g, ' ')}`);
       this.emit('delivered', letters);
       return true;
@@ -276,6 +301,10 @@ export function createMailbox(opts) {
 }
 
 export { sleep };
+
+
+
+
 
 
 

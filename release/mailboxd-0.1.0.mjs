@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 12:38:39
+// mailbox-kit v0.1.0 · 生成物，勿手改 · 2026-11-09 13:14:03
 
 // bin/mailboxd.js
 import { readFile as readFile5, writeFile as writeFile4, mkdir as mkdir3 } from "node:fs/promises";
@@ -935,7 +935,20 @@ if (has("--setup")) {
     }
     const self = selfRaw || "me";
     const peer = peerRaw;
-    const prefix = prefixRaw || "inbox-";
+    let guessed = "inbox-";
+    try {
+      const names = readdirSync(path6.resolve(dirIn)).filter(
+        (n) => n.endsWith(".md") && !/sync-conflict/.test(n)
+      );
+      if (names.length) {
+        const cut = names[0].indexOf("-");
+        const pre = cut > 0 ? names[0].slice(0, cut + 1) : "";
+        if (pre && names.every((n) => n.startsWith(pre))) guessed = pre;
+      }
+    } catch {
+    }
+    const prefix = prefixRaw || guessed;
+    if (!prefixRaw && guessed !== "inbox-") console.log("\u636E\u76EE\u5F55\u91CC\u7684\u6587\u4EF6\u540D\uFF0C\u524D\u7F00\u7528\u300C" + guessed + "\u300D\u3002\u4E0D\u5BF9\u5C31\u91CD\u8DD1\uFF0C\u624B\u52A8\u586B\u3002");
     const outIn = outRaw || "mailbox.config.json";
     const cfg = {
       dir: path6.resolve(dirIn),

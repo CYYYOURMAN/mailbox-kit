@@ -1,19 +1,28 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # 安卓安装：在 Termux 里跑这一个脚本，把 node 和 mailboxd 装好。
 # 用法：bash install-android.sh
-# 不写成 curl | bash：先把文件下到本地、看一眼，再跑。
+# 不写成 curl | bash：先把文件下到本地、对过 sha256，再跑。
 
 set -eu
 
 VERSION="${MAILBOX_VERSION:-0.1.0}"
 FILE="mailboxd-${VERSION}.mjs"
+# 兜底用的，拉不到旁文件时拿它比
+SHA_FALLBACK="8aead14a170d56c33eb081b0460dd1c14046baf0b7c5d977391a90066b07ecde"
 BASE_GITEE="https://gitee.com/copyme/mailbox-kit/raw/main/release"
 BASE_GITHUB="https://raw.githubusercontent.com/CYYYOURMAN/mailbox-kit/main/release"
 DIR="${HOME}/mailbox"
-BIN="${PREFIX:-/data/data/com.termux/files/usr}/bin"
 
 say() { printf '%s\n' "$*"; }
 die() { printf '停了：%s\n' "$*" >&2; exit 1; }
+
+get() { # get <url> <out>
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$1" -o "$2"
+  else
+    wget -q "$1" -O "$2"
+  fi
+}
 
 say "== 1/6 看环境 =="
 if [ "${PREFIX:-}" = "" ]; then
@@ -25,6 +34,7 @@ say "== 2/6 更新软件源 =="
 # 首次运行会弹镜像选择和 Y/n，这里全部默认答应，不让它卡住
 yes | pkg update -y >/dev/null 2>&1 || true
 yes | pkg upgrade -y >/dev/null 2>&1 || true
+say "  要是下一步装 node 报错，先退出 Termux 再打开一次，重跑这个脚本。"
 
 say "== 3/6 装 node =="
 pkg install -y nodejs >/dev/null 2>&1 || die "装 nodejs 失败，网络或者源的问题。"
@@ -34,24 +44,34 @@ say "  node 版本：${NODE_V}"
 case "$NODE_V" in
   v1[89].*|v[2-9][0-9].*) say "  够用。" ;;
   none) die "node 装完还是跑不起来。" ;;
-  *) die "node 版本太低（${NODE_V}），这版要 18 以上。先 pkg install -y nodejs 再跑一遍。" ;;
+  *) die "node 版本太低（${NODE_V}），这版要 18 以上。先 pkg install -y nodejs，或者退出 Termux 重开再跑一遍。" ;;
 esac
 
-say "== 4/6 下文件 =="
+say "== 4/6 下文件并校验 =="
 mkdir -p "$DIR"
 cd "$DIR"
 ok=0
 for base in "$BASE_GITEE" "$BASE_GITHUB"; do
   say "  试 ${base}/${FILE}"
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "${base}/${FILE}" -o "${FILE}.part" && ok=1
-  else
-    wget -q "${base}/${FILE}" -O "${FILE}.part" && ok=1
+  if get "${base}/${FILE}" "${FILE}.part" && get "${base}/${FILE}.sha256" "${FILE}.sha256.part"; then
+    ok=1; break
   fi
-  [ "$ok" = "1" ] && break
 done
-[ "$ok" = "1" ] || die "两个源都下不下来。挂个代理，或者手动把 ${FILE} 放进 ${DIR}。"
+if [ "$ok" != "1" ]; then
+  die "两个源都下不下来。挂个代理，或者手动把 ${FILE} 放进 ${DIR} 再跑。"
+fi
+WANT="$(awk '{print $1}' "${FILE}.sha256.part" 2>/dev/null || echo "")"
+[ -n "$WANT" ] || WANT="$SHA_FALLBACK"
+GOT="$(sha256sum "${FILE}.part" | awk '{print $1}')"
+if [ "$WANT" != "$GOT" ]; then
+  rm -f "${FILE}.part" "${FILE}.sha256.part"
+  die "下下来的文件跟公布的 sha256 对不上（要 ${WANT}，拿到 ${GOT}）。可能是下到半截，也可能源被换了。换个网络重跑，还是不对就别装。"
+fi
+say "  sha256 对上了。"
 mv "${FILE}.part" "$FILE"
+mv "${FILE}.sha256.part" "${FILE}.sha256"
+rm -f "${DIR}/mailboxd.mjs"
+ln -sf "${FILE}" "${DIR}/mailboxd.mjs"
 say "  $(wc -c < "$FILE") 字节，放在 ${DIR}/${FILE}"
 
 say "== 5/6 起服务 =="
@@ -60,13 +80,14 @@ cat > "${DIR}/run.sh" <<'EOS'
 cd "$(dirname "$0")"
 # 拿唤醒锁，别让系统睡过去把进程掐了
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock
-# 第一次没有配置，先问一轮
+# 没配置就别起，写日志等人来配
 if [ ! -f mailbox.config.json ]; then
-  node mailboxd.mjs --setup
+  echo "$(date '+%F %T') 没有 mailbox.config.json，先手动跑一次：bash run.sh --setup" >> run.log
+  exit 1
 fi
+echo "$(date '+%F %T') 起来，网页在 http://127.0.0.1:7654/" >> run.log
 exec node mailboxd.mjs --config mailbox.config.json --ui
 EOS
-ln -sf "${DIR}/${FILE}" "${DIR}/mailboxd.mjs"
 chmod +x "${DIR}/run.sh"
 
 say "== 6/6 自启（要你手动点两下）=="
@@ -75,7 +96,9 @@ if pm list packages 2>/dev/null | grep -q "termux.boot"; then
   cat > "${HOME}/.termux/boot/mailbox.sh" <<EOS
 #!/data/data/com.termux/files/usr/bin/bash
 termux-wake-lock
-nohup ${DIR}/run.sh > ${DIR}/run.log 2>&1 &
+# 没配置就只记一行日志，不开问答（开机会话没有终端，问了会卡住）
+[ -f "${DIR}/mailbox.config.json" ] || { echo "\$(date '+%F %T') 没配置，跳过一次" >> "${DIR}/run.log"; exit 0; }
+nohup "${DIR}/run.sh" >> "${DIR}/run.log" 2>&1 &
 EOS
   chmod +x "${HOME}/.termux/boot/mailbox.sh"
   say "  Termux:Boot 已装，开机脚本放到 ${HOME}/.termux/boot/mailbox.sh"
@@ -86,8 +109,10 @@ fi
 
 say ""
 say "下一步，手动来一次："
+say "  bash ${DIR}/run.sh --setup"
+say "配完再起："
 say "  bash ${DIR}/run.sh"
-say "第一次会让你填信箱目录、自己叫什么。填完浏览器开 http://127.0.0.1:7654 就能看信。"
+say "浏览器开 http://127.0.0.1:7654/ 就能看信。端口被占会自动往后找一个，具体地址写在 ${DIR}/run.log 第一行。"
 say ""
 say "两件脚本管不了、要你自己做的："
 say "  一，把 Termux 的电池优化关掉。不知道在哪就搜「<机型> termux 后台被杀」。"

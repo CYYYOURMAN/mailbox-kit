@@ -63,7 +63,20 @@ if (has('--setup')) {
     }
     const self = selfRaw || 'me';
     const peer = peerRaw;
-    const prefix = prefixRaw || 'inbox-';
+    // 前缀留空就从目录里已有的文件名反推，别硬塞 inbox-（目录里叫「信箱-手机.md」就全对不上）
+    let guessed = 'inbox-';
+    try {
+      const names = readdirSync(path.resolve(dirIn)).filter(
+        (n) => n.endsWith('.md') && !/sync-conflict/.test(n)
+      );
+      if (names.length) {
+        const cut = names[0].indexOf('-');
+        const pre = cut > 0 ? names[0].slice(0, cut + 1) : '';
+        if (pre && names.every((n) => n.startsWith(pre))) guessed = pre;
+      }
+    } catch {}
+    const prefix = prefixRaw || guessed;
+    if (!prefixRaw && guessed !== 'inbox-') console.log('据目录里的文件名，前缀用「' + guessed + '」。不对就重跑，手动填。');
     const outIn = outRaw || 'mailbox.config.json';
 
     const cfg = {

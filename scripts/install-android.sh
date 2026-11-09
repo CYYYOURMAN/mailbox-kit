@@ -80,6 +80,10 @@ cat > "${DIR}/run.sh" <<'EOS'
 cd "$(dirname "$0")"
 # 拿唤醒锁，别让系统睡过去把进程掐了
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock
+# 配一次：直接转给 node，不碰下面的启动流程
+if [ "$1" = "--setup" ]; then
+  exec node mailboxd.mjs --setup
+fi
 # 没配置就别起，写日志等人来配
 if [ ! -f mailbox.config.json ]; then
   echo "$(date '+%F %T') 没有 mailbox.config.json，先手动跑一次：bash run.sh --setup" >> run.log

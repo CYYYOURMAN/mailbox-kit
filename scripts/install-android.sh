@@ -85,7 +85,7 @@ if [ ! -f mailbox.config.json ]; then
   echo "$(date '+%F %T') 没有 mailbox.config.json，先手动跑一次：bash run.sh --setup" >> run.log
   exit 1
 fi
-echo "$(date '+%F %T') 起来，网页在 http://127.0.0.1:7654/" >> run.log
+echo "$(date '+%F %T') 起来，先试 http://127.0.0.1:7654/；被占会往后找，实际地址看下面插件打的那行" >> run.log
 exec node mailboxd.mjs --config mailbox.config.json --ui
 EOS
 chmod +x "${DIR}/run.sh"

@@ -132,12 +132,19 @@ async function main() {
   const archiveName = `${path.basename(file, '.md')}-归档-${todayMonth()}.md`;
   const archivePath = path.join(path.dirname(file), archiveName);
 
+  const moved = new Set(move);
+
   if (opt.dry) {
-    console.log(`[dry] 会搬 ${move.length} 条到 ${archiveName}，主文件剩 ${totalLines - countLines(move.map((i) => items[i]))} 行左右。`);
+    // 别拿「原来几行减去搬走几行」估——拼完还要压一遍空行，估出来会偏大。
+    // 真拼一次（不写盘），数出来的才是实跑会看到的数。
+    const dryHead = head.filter((l) => !l.startsWith(MARK));
+    dryHead.push(`${MARK} 更早的已办见 ${archiveName}`);
+    const dryBody = items.filter((_, i) => !moved.has(i)).map((it) => it.lines.join('\n'));
+    const dryOut = [...dryHead, ...dryBody].join('\n').replace(/\n{3,}/g, '\n\n');
+    console.log(`[dry] 会搬 ${move.length} 条到 ${archiveName}，主文件剩 ${dryOut.split(/\r?\n/).length} 行、${items.length - move.length} 条。`);
     return;
   }
 
-  const moved = new Set(move);
   const archiveLines = move.map((i) => items[i].lines.join('\n'));
 
   // 归档文件：第一次建时写个抬头；之后接在后面。

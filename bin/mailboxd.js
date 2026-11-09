@@ -8,8 +8,8 @@
 //
 // 路径一律按「配置文件所在目录」解析，不按 cwd——双击跑的时候 cwd 是随机的。
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createInterface } from 'node:readline/promises';
@@ -80,6 +80,28 @@ if (has('--setup')) {
       firstRunSilent: false,
     };
     if (peer) cfg.read = [prefix + peer + '.md'];
+    // 目录可能还不存在：先建，别让人看到一屏 Node 堆栈。
+    try {
+      await mkdir(cfg.dir, { recursive: true });
+    } catch (e) {
+      console.error('目录建不起来：' + e.message);
+      process.exit(2);
+    }
+
+    // 自己那份要拼得出来。拼错的话软件能跑，但一条信也读不到，而且不报错——所以在这儿拦一次。
+    const selfName = cfg.selfFile || prefix + self + cfg.ext;
+    const selfPath = path.join(cfg.dir, selfName);
+    if (!existsSync(selfPath)) {
+      let cands = [];
+      try {
+        cands = readdirSync(cfg.dir).filter((n) => n.endsWith(cfg.ext));
+      } catch {}
+      console.log('\n注意：' + selfPath + ' 现在不存在。');
+      if (cands.length) console.log('这个目录里现有：' + cands.join('、'));
+      console.log('要是文件名不按「前缀+自己+后缀」拼，请在配置里加一项 selfFile（自己那份的完整文件名）。');
+      console.log('不然写信会写进一个没人读的新文件，界面也看不到自己那几条。');
+    }
+
     const outFile = path.resolve(outIn);
     await writeFile(outFile, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
     console.log('\n写好了：' + outFile);
@@ -173,6 +195,7 @@ if (has('--ui')) {
     prefix: raw.prefix,
     ext: raw.ext,
     read: raw.read,
+    selfFile: raw.selfFile,
     port: Number(val('--port', raw.uiPort || 7654)),
     log: (s) => console.log(s),
   });

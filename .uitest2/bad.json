@@ -1,0 +1,12 @@
+{
+  "dir": "C:\\Users\\30259\\Aurabot\\qq-chats\\mailbox-kit\\.uitest2",
+  "pollMs": 600000,
+  "prefix": "inbox-",
+  "ext": ".md",
+  "selfFile": "信箱-不存在的.md",
+  "self": "pc",
+  "adapter": "stdout",
+  "read": [
+    "信箱-手机.md"
+  ]
+}

@@ -113,13 +113,19 @@ export function createUiServer(opts) {
     prefix = 'inbox-',
     ext = '.md',
     read,
+    selfFile: selfFileOpt,
     host = '127.0.0.1',
     port = 7654,
     log = () => {},
   } = opts;
 
   const key = randomBytes(8).toString('hex');
-  const selfFile = path.join(dir, prefix + self + ext);
+  // 自己那份：优先用显式给的 selfFile。中文命名（信箱-手机.md）靠 prefix+self 拼不出来时，
+  // 只有这个能救——默认的 inbox- 前缀会拼出一个根本不存在的文件，写进去也没人读到。
+  const selfFile = selfFileOpt
+    ? path.join(dir, selfFileOpt)
+    : path.join(dir, prefix + self + ext);
+  log('自己那份：' + selfFile);
 
   async function allLetters() {
     // 自己那份单独读：listBoxFiles 默认把「自己的」排除在外，可界面要能标自己的条。
@@ -225,7 +231,11 @@ export function createUiServer(opts) {
           json(res, 403, { error: '不是自己写的，不能标' });
           return;
         }
-        const text = await readFile(selfFile, 'utf8');
+        const text = await readFile(selfFile, 'utf8').catch(() => null);
+        if (text === null) {
+          json(res, 409, { error: '自己那份文件不存在：' + selfFile + '（prefix 或 selfFile 可能填错了）' });
+          return;
+        }
         const lines = text.split(/\r?\n/);
         const i = hit.line - 1;
         if (!lines[i] || !/^- \[ \]/.test(lines[i])) {

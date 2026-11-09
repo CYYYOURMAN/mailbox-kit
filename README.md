@@ -95,9 +95,11 @@ node bin/mailboxd.js --setup
 
 ```
 notes/
-  信箱-alice.md    ← alice 写
-  信箱-bob.md      ← bob 写
+  inbox-alice.md    ← alice 写
+  inbox-bob.md      ← bob 写
 ```
+
+前缀 `inbox-` 是默认值，随便改（我们自己在用的那两份叫 `信箱-电脑.md`、`信箱-手机.md`），只要两边一致。
 
 正文每条形如：
 
@@ -203,6 +205,7 @@ MIT。见 [LICENSE](LICENSE)。
 
 想看两台机器、两个 AI 真的互相叫醒一次：**[案例](docs/两台机器两个AI.md)**。
 想看三台机器（常驻、随身、指挥）怎么分工：**[三台机器怎么分工](docs/三台机器怎么分工.md)**。
+
 
 
 

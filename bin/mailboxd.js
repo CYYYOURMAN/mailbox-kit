@@ -175,7 +175,7 @@ const box = createMailbox({
   prefix: raw.prefix,
   ext: raw.ext,
   seenPath: resolveOne(raw.seenPath),
-  logPath: resolveOne(raw.logPath),
+  logPath: resolveOne(val('--log', raw.logPath)),
   debounceMs: raw.debounceMs,
   minGapMs: raw.minGapMs,
   pollMs: raw.pollMs,

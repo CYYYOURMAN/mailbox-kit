@@ -33,8 +33,12 @@ export function createLogger(file, { maxBytes = 1024 * 1024, keep = 2 } = {}) {
     size = 0;
   }
 
+  // 本地时间，不带时区。原来用 toISOString() 是 UTC，跟对面机器对时间会差好几个小时，
+  // 排「谁说晚了」这种问题时能把人绕死。
   return async function log(line) {
-    const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    const d = new Date();
+    const p2 = (n) => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
     const text = `[${stamp}] ${line}\n`;
     try {
       if (!ready) ready = mkdir(path.dirname(file), { recursive: true });

@@ -19,6 +19,8 @@
     "bin",
     "test",
     "docs",
+    "release",
+    "scripts",
     "README.md",
     "mailbox.config.example.json"
   ],
@@ -42,4 +44,5 @@
     "esbuild": "^0.28.2"
   }
 }
+
 

@@ -11,3 +11,5 @@ dist/
 .ui-err.txt
 start-ui.mjs
 .uitest/
+.demo/
+.demo*

@@ -22,7 +22,9 @@
     "mailbox.config.example.json"
   ],
   "scripts": {
-    "test": "node test/run.mjs"
+    "test": "node test/run.mjs",
+    "build": "node scripts/build.mjs",
+    "setup": "node bin/mailboxd.js --setup"
   },
   "keywords": [
     "mailbox",
@@ -34,5 +36,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

@@ -91,7 +91,7 @@ node bin/mailboxd.js --ui
 
 跑完终端会打一行带口令的地址，浏览器打开就是信箱。
 
-**最重：接进 AI。** 用 DeepSeek Harness 的话，装现成的 `mailbox-dsh` 插件就行；别的引擎要自己写三十行适配层，模板在 `adapters/dsh-engine.example.js`。
+**最重：接进 AI。** 用 DeepSeek Harness 的话，装现成的 `mailbox-dsh` 插件就行；别的引擎要自己写三十行适配层——不用自己憋，把 [docs/让AI写适配层.md](docs/让AI写适配层.md) 里那段话复制给你的 AI，它照模板写，你按三条验。
 
 第一次装，看 [docs/十分钟上手.md](docs/十分钟上手.md)。安卓上装看 [docs/安卓上装.md](docs/安卓上装.md)。
 

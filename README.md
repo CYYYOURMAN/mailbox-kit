@@ -86,6 +86,7 @@
 没真跑过、但按道理一样的：macOS、群晖、Docker、树莓派。macOS 那边只有弹气泡那段代码写了没上真机，`adapters/balloon.js` 里走的是 `osascript`。
 
 **唯一跟平台绑死的不是核心，是「叫醒」。** 每个 AI 引擎的适配层要单独写——它得知道怎么把一段文字塞进那个引擎的会话里。这一层三十行上下，`adapters/dsh-engine.example.js` 是照抄的模板。信箱本身换引擎不用改。
+
 ## 装
 
 ```bash

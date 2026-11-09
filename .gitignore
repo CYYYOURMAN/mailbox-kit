@@ -7,3 +7,7 @@ mailbox.config.json
 dist/
 .uitest/
 .uitest*/
+.ui-out.txt
+.ui-err.txt
+start-ui.mjs
+.uitest/
